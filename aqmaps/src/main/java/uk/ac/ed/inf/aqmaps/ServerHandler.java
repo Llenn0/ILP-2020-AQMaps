@@ -9,7 +9,7 @@ import java.net.http.HttpResponse;
 import com.google.gson.*;
 
 public class ServerHandler {
-	private String uri;
+	private final String uri;
 	
 	public ServerHandler(int port) {
 		this.uri = String.format("http://localhost:%d", port);
@@ -39,9 +39,9 @@ public class ServerHandler {
 		Gson gson = new GsonBuilder().create();
 		
 		// Parse into a JsonObject so that we can dig into it and retrieve the coords
-		JsonObject jsonData = gson.fromJson(data, JsonObject.class);
+		var jsonData = gson.fromJson(data, JsonObject.class);
 		
-		JsonObject coords = jsonData.getAsJsonObject("coordinates");
+		var coords = jsonData.getAsJsonObject("coordinates");
 		
 		// Return the coords as an instance of our Coords class
 		return new Coords(coords.get("lng").getAsDouble(), coords.get("lat").getAsDouble());
@@ -69,13 +69,13 @@ public class ServerHandler {
 	// Directory is the first folder, pathArgs allows us to traverse deeper into the folder in question, and file specifies the filename we want
 	private URI buildUri(String baseUri, String directory, String[] pathArgs, String file) {
 		
-		String uriString = baseUri + "/" + directory;
+		var uriString = baseUri + "/" + directory;
 		
 		for(String arg : pathArgs) {
 			uriString = (uriString + "/" + arg);
 		}
 		
-		uriString = uriString + "/" + file;
+		uriString += "/" + file;
 		
 		return URI.create(uriString);
 	}

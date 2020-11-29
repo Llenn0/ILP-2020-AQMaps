@@ -9,7 +9,7 @@ import com.mapbox.geojson.*;
 public class NoFlyZone {
 	
 	private List<Coords> pointList;
-	private String name;
+	private final String name;
 
 	public NoFlyZone(Polygon poly, String name) {
 		this.name = name;

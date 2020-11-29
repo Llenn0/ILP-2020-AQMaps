@@ -10,50 +10,44 @@ public class FlightController {
 	private List<NoFlyZone> noFlyZones;
 	private List<Coords> coordsList;
 	private FlightPath[][] pathMatrix;
-	private List<String> sensors;
+	private List<String> sensorNames;
+	private int[][] connectivityMatrix;
 	
-	public FlightController(List<NoFlyZone> noFly, List<Coords> coords, Coords start, List<String> sensorNames) {
+	public FlightController(List<NoFlyZone> noFly, List<Coords> coords, Coords start, List<String> sensors) {
 		this.noFlyZones = noFly;
 		this.coordsList = coords;
 		this.START_POINT = start;
-		this.sensors = sensorNames;
+		this.sensorNames = sensors;
 		coordsList.add(0, START_POINT);
 		this.pathMatrix = generatePathMatrix(coords);
+		this.connectivityMatrix = new int[coordsList.size()][coordsList.size()];
 	}
 
 	// The primary algorithm for generating the order in which we visit the sensors
 	// This uses the sorted edges approach to form a hamiltonian circuit - read documentation for more details
-	public List<FlightPath> getOptimalOrder() {
-		int[][] connectivityMatrix = new int[coordsList.size()][coordsList.size()];
+	public List<FlightPath> generateOrder() {
 		List<Integer> usedNodes = new ArrayList<Integer>();
 		List<Integer> fullNodes = new ArrayList<Integer>();
-		List<Integer> order = new ArrayList<Integer>();
-		usedNodes.add(0);
-		order.add(0);
+		
+		for(int i = 0; i <= 33; i++) {
+			usedNodes.add(i);
+		}
 		
 		while(usedNodes.size() != 0) {
 			Triplet<Integer, Integer, Integer> shortest = new Triplet<Integer, Integer, Integer>(-1, -1, 99999);
 			for(int used : usedNodes) {
-				Triplet<Integer, Integer, Integer> newShortest = getShortestValidDist(connectivityMatrix, used, fullNodes);
+				Triplet<Integer, Integer, Integer> newShortest = getShortestValidDist(used, fullNodes);
 				if(newShortest.getValue2() < shortest.getValue2()) {
 					shortest = newShortest;
 				}
 			}
 			
-			if(!isDegree(connectivityMatrix, shortest.getValue1(), 1)) usedNodes.add(shortest.getValue1());
+			System.out.println("Creating link between " + shortest.getValue0() + " and " + shortest.getValue1() + " of length " + shortest.getValue2());
 			connectivityMatrix[shortest.getValue0()][shortest.getValue1()] = 1;
 			connectivityMatrix[shortest.getValue1()][shortest.getValue0()] = 1;
 
-			if(order.size() < coordsList.size()) {
-				if(order.indexOf(shortest.getValue0()) == order.size()-1) {
-					order.add(shortest.getValue1());
-				} else {
-					order.add(order.indexOf(shortest.getValue0()), shortest.getValue1());
-				}
-			}
-
 			for(int node : usedNodes) {
-				if(isDegree(connectivityMatrix, node, 2)) {
+				if(isDegree(node, 2)) {
 					fullNodes.add(node);
 				}
 			}
@@ -65,18 +59,10 @@ public class FlightController {
 			}
 		}
 		
-		order = beginAtStartPoint(order);
+		// Form the order using the connectivity matrix
+		List<Integer> order = traverseConnections(0);
 		
 		return createPathList(order);
-	}
-
-	
-	// Takes an existing order and reshuffles it so that the path begins at our start point (represented as 'sensor' 0).
-	// This does not alter the path itself, just the point at which it begins.
-	private List<Integer> beginAtStartPoint(List<Integer> order) {
-		List<Integer> newOrder = order.subList(order.indexOf(0), order.size());
-		newOrder.addAll(order.subList(0, order.indexOf(0)));
-		return newOrder;
 	}
 
 	// Takes an ordered list of integers as input, and generates the final list of flightPath to be used as output.
@@ -85,33 +71,19 @@ public class FlightController {
 		List<FlightPath> pathList = new ArrayList<FlightPath>();
 		pathList.add(pathMatrix[order.get(0)][order.get(1)]); // We can rely on the path from 0 to the first node, as we start from the exact node position.
 		System.out.println("Adding line path between " + order.get(0) + " and " + order.get(1));
-		for(int i = 1; i < order.size(); i++) {
+		for(int i = 1; i < order.size()-1; i++) {
 			
 			List<Move> prevMoves = pathList.get(i-1).getMoveList();
 			Coords prevEnd = prevMoves.get(prevMoves.size()-1).getEnd(); // Fetches the point at which our last flightpath ended
 			
-			if(i == order.size()-1) {
-				pathList.add(new FlightPath(prevEnd, coordsList.get(order.get(0)), noFlyZones, sensors.get(order.get(0)))); // For the last connection, we need to return to the start
-				System.out.println("Adding line path between " + order.get(i) + " and " + order.get(0));
-			} else {
-				pathList.add(new FlightPath(prevEnd, coordsList.get(order.get(i+1)), noFlyZones, sensors.get(order.get(i+1)))); // Add the path between the last node's end and the new node to connect to
-				System.out.println("Adding line path between " + order.get(i) + " and " + order.get(i+1));
-			}
+			pathList.add(new FlightPath(prevEnd, coordsList.get(order.get(i+1)), noFlyZones, sensorNames.get(order.get(i+1)))); // Add the path between the last node's end and the new node to connect to
+			System.out.println("Adding line path between " + order.get(i) + " and " + order.get(i+1));
 		}
 		return pathList;
 	}
 
-	// Uses the connectivityMatrix to check whether we have already made a certain connection between two nodes.
-	private boolean alreadyConnected(int[][] connectivityMatrix, int from, int to) {
-		if(connectivityMatrix[from][to] == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	// Calculates the degree of a given node using the connectivityMatrix.
-	private boolean isDegree(int[][] connectivityMatrix, int node, int degree) {
+	private boolean isDegree(int node, int degree) {
 	    int sum = 0;
 	    for (int value : connectivityMatrix[node]) { // Check how many nodes are connected to the node in question.
 	        sum += value;
@@ -125,42 +97,73 @@ public class FlightController {
 	}
 
 	// Checks whether making a given connection would complete a loop before all nodes were included in it
-	private boolean wouldCompleteLoopEarly(int[][] connectivityMatrix, int from, int to) {
-		boolean wouldComplete = true;
-		boolean readyToComplete = true;
+	private boolean wouldCompleteLoopEarly(int from, int to) {
+		var connectionList = traverseConnections(from);
+		var wouldComplete = false;
+		var readyToComplete = false;
 		
-	    for(int i = 0; i < connectivityMatrix[0].length; i++) {
-	    	int sum = 0;
-		    for(int j = 0; j < connectivityMatrix[0].length; j++) {
-		    	sum += connectivityMatrix[i][j];
-		    }
-		    if(i == from || i == to) {
-		    	if(sum != 1) wouldComplete = false; // Unless the degree of both the nodes is 1, connecting them will not complete the loop
-		    } else {
-		    	if(sum != 2) readyToComplete = false; // If the degree of all nodes other than these two is 2, the loop is ready to be completed anyway
-		    }
-	    }
-	    
-	    if(wouldComplete) {
-	    	if(readyToComplete) {
-	    		return false;
-	    	} else {
-	    		return true;
-	    	}
-	    } else {
-	    	return false;
-	    }
+		if(connectionList.get(connectionList.size()-1) == to) {
+			wouldComplete = true;
+		}
+		
+		if(connectionList.size() == coordsList.size()) {
+			readyToComplete = true;
+		}
+		
+		if(wouldComplete && !readyToComplete) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	// Uses the connectivity matrix to form an ordered list from the given point
+	// This is used to check where a current line segment ends, and to form the final order.
+	private List<Integer> traverseConnections(int from) {
+		var prevNode = -1;
+		var currNode = from;
+		var nextNode = -1;
+		
+		List<Integer> order = new ArrayList<Integer>();
+		order.add(from);
+		
+		// Find the first link, as we require a nextNode to loop
+		for(int i = 0; i < connectivityMatrix[from].length; i++) {
+			if(connectivityMatrix[from][i] == 1) {
+				nextNode = i;
+				order.add(nextNode);
+				break;
+			}
+		}
+		
+		// If there is no connected node, we early exit
+		if(nextNode == -1) {
+			return order;
+		}
+		
+		// Until the links stop, or we loop back to where we came from...
+		while(nextNode != currNode && nextNode != from) {
+			prevNode = currNode;
+			currNode = nextNode;
+			for(int i = 0; i < connectivityMatrix[currNode].length; i++) {
+				if(connectivityMatrix[currNode][i] == 1 && i != prevNode) {
+					nextNode = i;
+					order.add(nextNode);
+				}
+			}
+		}
+		return order;
 	}
 
 	// Returns a Triplet containing the index we are interested in, the node closest to it, and the distance to that node (in moves)
-	private Triplet<Integer, Integer, Integer> getShortestValidDist(int[][] connectivityMatrix, int index, List<Integer> fullNodes) {
+	private Triplet<Integer, Integer, Integer> getShortestValidDist(int index, List<Integer> fullNodes) {
 		
 		int shortestNode = 0;
 		int shortestDistance = 99999999;
 		
 		for(int i = 0; i < pathMatrix[index].length; i++) { // Iterate through all paths from the given index node
-			if((i != index) && (pathMatrix[index][i].getMoveCount() < shortestDistance) && pathMatrix[index][i].getMoveCount() > 0) { // If we have a new shortest node with a movecount > 0...
-				if(!wouldCompleteLoopEarly(connectivityMatrix, index, i) && !alreadyConnected(connectivityMatrix, index, i) && !fullNodes.contains(i)) { // Check that none of our three 'bad' conditions are true...
+			if((i != index) && (pathMatrix[index][i].getMoveCount() < shortestDistance)) { // If we have a new shortest node...
+				if(!wouldCompleteLoopEarly(index, i) && !fullNodes.contains(i)) { // Check that none of our 'bad' conditions are true...
 					shortestNode = i; // If it reaches here, the node is a valid new shortest connection.
 					shortestDistance = pathMatrix[index][i].getMoveCount();
 				}
@@ -171,7 +174,7 @@ public class FlightController {
 	}
 
 	// Generates the pathMatrix, giving us estimates of the number of moves to go between any two points on the map.
-	// The reason these are only estimates is that in reality we don't begin (most) paths at the exact coordinates of a node.
+	// The reason these are only estimates is that in reality we will almost never begin paths at the exact coordinates of a node.
 	private FlightPath[][] generatePathMatrix(List<Coords> coords) {
 		FlightPath[][] matrix = new FlightPath[coords.size()][coords.size()];
 		
@@ -180,7 +183,7 @@ public class FlightController {
 				FlightPath currPath = null;
 				
 				if(i != j) { // A flightPath is only valid if it connects two different points
-					currPath = new FlightPath(coords.get(i), coords.get(j), this.noFlyZones, sensors.get(j));
+					currPath = new FlightPath(coords.get(i), coords.get(j), this.noFlyZones, sensorNames.get(j));
 				}
 				
 				matrix[i][j] = currPath;

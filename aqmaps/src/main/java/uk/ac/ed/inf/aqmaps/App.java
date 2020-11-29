@@ -12,13 +12,13 @@ public class App
     public static void main( String[] args )
     {
         // Split args into its corresponding variables
-        String day = args[0];
-        String month = args[1];
-        String year = args[2];
-        double startLat = Double.parseDouble(args[3]);
-        double startLng = Double.parseDouble(args[4]);
-        int seed = Integer.parseInt(args[5]); // Unused, but still worth having as a variable
-        int port = Integer.parseInt(args[6]);
+        final String day = args[0];
+        final String month = args[1];
+        final String year = args[2];
+        final double startLat = Double.parseDouble(args[3]);
+        final double startLng = Double.parseDouble(args[4]);
+        final int seed = Integer.parseInt(args[5]); // Unused, but still worth having as a variable
+        final int port = Integer.parseInt(args[6]);
         
         // Initialise variables
         ServerHandler server = new ServerHandler(port);
@@ -34,7 +34,7 @@ public class App
 		// Fetch data from the server
         try {
 			locations = server.getSensorData(year, month, day);
-			int index = 1;
+			var index = 1;
 			for(var loc : locations) {
 				Coords coords = server.convertWordToCoords(loc.getLocation());
 				Feature marker = geo.generateMarker(loc, coords);
@@ -56,10 +56,10 @@ public class App
         // Perform pathfinding algorithm
 		List<NoFlyZone> noFlyZones = geo.parseNoFlyZones(noFlyZoneData);
 		FlightController controller = new FlightController(noFlyZones, coordsList, startPoint, sensorNames);
-		ArrayList<FlightPath> totalPath = (ArrayList<FlightPath>) controller.getOptimalOrder();
+		ArrayList<FlightPath> totalPath = (ArrayList<FlightPath>) controller.generateOrder();
 		
 		// Display some logging output
-		int sum = 0;
+		var sum = 0;
 		for(FlightPath path : totalPath) {
 			sum = sum + path.getMoveCount();
 		}
@@ -82,7 +82,7 @@ public class App
 		
 	    try {
 	        FileWriter writer = new FileWriter("flightpath-"+day+"-"+month+"-"+year+".txt");
-			int moveNo = 1;
+			var moveNo = 1;
 			
 			// For each move, we read it's properties and write to the file in the order specified
 			for(FlightPath currPath:totalPath) {

@@ -34,7 +34,7 @@ public class FlightPath {
 			int roundedAngle = (int) (10 * (Math.round(optimalAngle/10))); // Rounds to the nearest multiple of 10
 			Coords newPos = getNewLocation(currPos, roundedAngle);
 			if(entersNoFlyZone(currPos, newPos) || leavesConfinementZone(newPos)) { // If we enter a no-fly zone or leave the drone confinement area...
-				int previous = -1;
+				var previous = -1;
 				// If a previous move exists, fetch it.
 				if(moves.size() > 0) previous = moves.get(moves.size()-1).getBearing();
 				// Calculate the optimal angle to avoid the obstacle
@@ -43,7 +43,7 @@ public class FlightPath {
 				newPos = getNewLocation(currPos, roundedAngle);
 			}
 			if(roundedAngle == 360) roundedAngle = 0;
-			String sensorClose = "null";
+			var sensorClose = "null";
 			if(isClose(newPos, endPos)) sensorClose = sensor;
 			moves.add(new Move(currPos, newPos, roundedAngle, sensorClose)); // Finally, add the move to our list
 			currPos = newPos;
@@ -55,7 +55,18 @@ public class FlightPath {
 			int roundedAngle = (int) (10 * (Math.round(optimalAngle/10)));
 			Coords newPos = getNewLocation(currPos, roundedAngle);
 			if(roundedAngle == 360) roundedAngle = 0;
-			moves.add(new Move(startPos, newPos, roundedAngle, sensor));
+
+			if(!isClose(newPos, endPos)) { // If we are unfortunate and move out of range, perform the opposite move to return back to where we came.
+				moves.add(new Move(startPos, newPos, roundedAngle, "null"));
+				currPos = newPos;
+				int newAngle = roundedAngle + 180;
+				if(newAngle > 350) newAngle -= 360;
+				newPos = getNewLocation(currPos, newAngle);
+				moves.add(new Move(currPos, newPos, newAngle, sensor));
+			} else {
+				moves.add(new Move(startPos, newPos, roundedAngle, sensor));
+				currPos = newPos;
+			}
 		}
 		
 		return moves;
@@ -74,8 +85,8 @@ public class FlightPath {
 	// This function can be called with previous = some angle, or = -1. If it is -1, this is the first move on the path.
 	private int calculateNewAngle(Coords currPos, int optimalAngle, int previous) {
 		
-		int turnInc = optimalAngle + 10;
-		int turnDec = optimalAngle - 10;
+		var turnInc = optimalAngle + 10;
+		var turnDec = optimalAngle - 10;
 		
 		// Find the closest angle to the optimal one by turning in a positive direction, and a negative direction
 		while(entersNoFlyZone(currPos, getNewLocation(currPos, turnInc)) || leavesConfinementZone(getNewLocation(currPos, turnInc))) {
@@ -107,7 +118,7 @@ public class FlightPath {
 
 	// Helper function to find the distance between any two angles
 	private int angleDistance(int angle1, int angle2) {
-		int dist = (int) ((angle1 - angle2) % 360.0);
+		var dist = (int) ((angle1 - angle2) % 360.0);
         if (dist < -180) dist += 360;
         if (dist >= 180) dist -= 360;
 		return Math.abs(dist);
@@ -123,8 +134,8 @@ public class FlightPath {
 
 	// Performs the actual movement, using trigonometry to find the position of the drone after it moves at a given angle.
 	private Coords getNewLocation(Coords currPos, int roundedAngle) {
-		double lngIncrement = MOVE * Math.cos(Math.toRadians(roundedAngle));
-		double latIncrement = MOVE * Math.sin(Math.toRadians(roundedAngle));
+		var lngIncrement = MOVE * Math.cos(Math.toRadians(roundedAngle));
+		var latIncrement = MOVE * Math.sin(Math.toRadians(roundedAngle));
 		return new Coords(currPos.getLng() + lngIncrement, currPos.getLat() + latIncrement);
 	}
 
@@ -144,8 +155,8 @@ public class FlightPath {
 	
 	// Simple Euclidean distance function
 	private double getDistBetween(Coords c1, Coords c2) {
-		double xdiff = Math.pow(c2.getLng() - c1.getLng(), 2);
-		double ydiff = Math.pow(c2.getLat() - c1.getLat(), 2);
+		var xdiff = Math.pow(c2.getLng() - c1.getLng(), 2);
+		var ydiff = Math.pow(c2.getLat() - c1.getLat(), 2);
 		double dist = Math.sqrt(xdiff + ydiff);
 		return dist;
 	}

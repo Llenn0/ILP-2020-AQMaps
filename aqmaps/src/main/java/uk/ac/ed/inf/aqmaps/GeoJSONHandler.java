@@ -23,8 +23,8 @@ public class GeoJSONHandler {
 		Feature pointFeature = Feature.fromGeometry(point);
 		pointFeature.addStringProperty("location", loc.getLocation());
     	if(loc.getBattery() > 10) { // If battery is below 10%, the reading cannot be trusted
-    		String rgb = getRGBFromReading(Float.parseFloat(loc.getReading()));
-    		String symbol = getSymbolFromReading(Float.parseFloat(loc.getReading()));
+    		var rgb = getRGBFromReading(Float.parseFloat(loc.getReading()));
+    		var symbol = getSymbolFromReading(Float.parseFloat(loc.getReading()));
         	pointFeature.addStringProperty("rgb-string", rgb);
         	pointFeature.addStringProperty("marker-color", rgb);
         	pointFeature.addStringProperty("marker-symbol", symbol);
@@ -39,7 +39,7 @@ public class GeoJSONHandler {
 	// Generates the final geojson output of the program, writing to file
 	public void outputJSON(List<Feature> featureList, String day, String month, String year) {
         FeatureCollection featureColl = FeatureCollection.fromFeatures(featureList);
-        String featureJSON = featureColl.toJson();
+        var featureJSON = featureColl.toJson();
         // We write the geoJSON to the file using FileWriter
         try {
             FileWriter writer = new FileWriter("readings-"+day+"-"+month+"-"+year+".geojson");
@@ -59,7 +59,7 @@ public class GeoJSONHandler {
 		List<Feature> features = coll.features();
 		for(Feature f : features) { // For each feature, we find its polygon boundary and use that to generate a noFlyZone
 			Polygon poly = (Polygon) f.geometry();
-			String name = f.getStringProperty("name");
+			var name = f.getStringProperty("name");
 			NoFlyZone noFlyZone = new NoFlyZone(poly, name);
 			noFlyZones.add(noFlyZone);
 		}

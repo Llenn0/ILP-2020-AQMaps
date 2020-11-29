@@ -1,9 +1,9 @@
 package uk.ac.ed.inf.aqmaps;
 
 public class Sensor {
-	private String location;
-	private double battery;
-	private String reading;
+	private final String location;
+	private final double battery;
+	private final String reading;
 	
 	public Sensor(String location, double battery, String reading) {
 		this.location = location;
