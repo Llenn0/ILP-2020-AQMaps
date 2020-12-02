@@ -19,7 +19,7 @@ public class ServerHandler {
 	public Sensor[] getSensorData(String year, String month, String day) throws IOException, InterruptedException {
 		
 		// Retrieve the server data using getServerData
-		String data = getServerData(buildUri(this.uri, "maps", new String[] {year, month, day}, "air-quality-data.json"));
+		String data = getServerData(buildUri("maps", new String[] {year, month, day}, "air-quality-data.json"));
 		
 		Gson gson = new GsonBuilder().create();
 		
@@ -34,7 +34,7 @@ public class ServerHandler {
 		String[] words = location.split("\\.");
 		
 		// Retrieve the server data using getServerData
-		String data = getServerData(buildUri(this.uri, "words", words, "details.json"));
+		String data = getServerData(buildUri("words", words, "details.json"));
 		
 		Gson gson = new GsonBuilder().create();
 		
@@ -49,7 +49,7 @@ public class ServerHandler {
 	
 	// Simple method to retrieve the no-fly zones geojson data
 	public String getNoFlyZoneData() throws IOException, InterruptedException {
-		String data = getServerData(buildUri(this.uri, "buildings", new String[] {}, "no-fly-zones.geojson"));
+		String data = getServerData(buildUri("buildings", new String[] {}, "no-fly-zones.geojson"));
 		return data;
 	}
 	
@@ -67,9 +67,9 @@ public class ServerHandler {
 
 	// Helper method that builds a Uri to retrieve a certain resource in the server
 	// Directory is the first folder, pathArgs allows us to traverse deeper into the folder in question, and file specifies the filename we want
-	private URI buildUri(String baseUri, String directory, String[] pathArgs, String file) {
+	private URI buildUri(String directory, String[] pathArgs, String file) {
 		
-		var uriString = baseUri + "/" + directory;
+		var uriString = uri + "/" + directory;
 		
 		for(String arg : pathArgs) {
 			uriString = (uriString + "/" + arg);

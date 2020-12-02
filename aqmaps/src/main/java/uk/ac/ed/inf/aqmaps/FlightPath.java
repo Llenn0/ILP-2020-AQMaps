@@ -6,18 +6,18 @@ import java.util.List;
 public class FlightPath {
 
 	private static final double MOVE = 0.0003;
-	private int moveCount;
-	private List<Move> moveList;
+	private final int moveCount;
+	private final List<Move> moveList;
 	private final Coords startPos;
 	private final Coords endPos;
-	private List<NoFlyZone> noFlyZones;
-	private String sensor;
+	private final List<NoFlyZone> noFlyZones;
+	private final String sensorName;
 	
 	public FlightPath(Coords start, Coords end, List<NoFlyZone> noFly, String sensorName) {
 		this.startPos = start;
 		this.endPos = end;
 		this.noFlyZones = noFly;
-		this.sensor = sensorName;
+		this.sensorName = sensorName;
 		this.moveList = calculateFlightPath();
 		this.moveCount = moveList.size();
 	}
@@ -44,7 +44,7 @@ public class FlightPath {
 			}
 			if(roundedAngle == 360) roundedAngle = 0;
 			var sensorClose = "null";
-			if(isClose(newPos, endPos)) sensorClose = sensor;
+			if(isClose(newPos, endPos)) sensorClose = sensorName;
 			moves.add(new Move(currPos, newPos, roundedAngle, sensorClose)); // Finally, add the move to our list
 			currPos = newPos;
 		}
@@ -62,9 +62,9 @@ public class FlightPath {
 				int newAngle = roundedAngle + 180;
 				if(newAngle > 350) newAngle -= 360;
 				newPos = getNewLocation(currPos, newAngle);
-				moves.add(new Move(currPos, newPos, newAngle, sensor));
+				moves.add(new Move(currPos, newPos, newAngle, sensorName));
 			} else {
-				moves.add(new Move(startPos, newPos, roundedAngle, sensor));
+				moves.add(new Move(startPos, newPos, roundedAngle, sensorName));
 				currPos = newPos;
 			}
 		}

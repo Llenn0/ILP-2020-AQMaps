@@ -66,7 +66,7 @@ public class GeoJSONHandler {
 		return noFlyZones;
 	}
 	
-	// Creates a lineString path given the calculates list of flightpaths
+	// Creates a lineString path given the calculated list of flightpaths
 	// Each move is considered to be one point on the lineString.
 	public Feature generatePath(List<FlightPath> pathList) {
 		List<Point> pointList = new ArrayList<Point>();
