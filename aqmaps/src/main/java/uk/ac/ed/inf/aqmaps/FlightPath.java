@@ -54,7 +54,14 @@ public class FlightPath {
 			if(optimalAngle < 0) optimalAngle = optimalAngle + 360;
 			int roundedAngle = (int) (10 * (Math.round(optimalAngle/10)));
 			Coords newPos = getNewLocation(currPos, roundedAngle);
-			if(roundedAngle == 360) roundedAngle = 0;
+
+			if(entersNoFlyZone(currPos, newPos) || leavesConfinementZone(newPos)) { // If we enter a no-fly zone or leave the drone confinement area...
+				// Calculate the optimal angle to avoid the obstacle
+				int newAngle = calculateNewAngle(currPos, roundedAngle, -1);
+				roundedAngle = newAngle;
+				if(roundedAngle == 360) roundedAngle = 0;
+				newPos = getNewLocation(currPos, roundedAngle);
+			}
 
 			if(!isClose(newPos, endPos)) { // If we are unfortunate and move out of range, perform the opposite move to return back to where we came.
 				moves.add(new Move(startPos, newPos, roundedAngle, "null"));

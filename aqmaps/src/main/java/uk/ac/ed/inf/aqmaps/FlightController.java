@@ -77,6 +77,7 @@ public class FlightController {
 			Coords prevEnd = prevMoves.get(prevMoves.size()-1).getEnd(); // Fetches the point at which our last flightpath ended
 			System.out.println("Adding line path between " + order.get(i) + " and " + order.get(i+1));
 			pathList.add(new FlightPath(prevEnd, coordsList.get(order.get(i+1)), noFlyZones, sensorNames.get(order.get(i+1)))); // Add the path between the last node's end and the new node to connect to
+
 		}
 		return pathList;
 	}
