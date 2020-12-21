@@ -1,1 +1,3 @@
 # ILP-2020-AQMaps
+
+This is my implementation of Coursework 2 of the Informatics Large Practical 2020. The AQmaps system retrieves data from a web server, and uses this data to compute an effective path for a drone to take so that it visits every sensor on a given day. The path is outputted as GeoJSON which can be rendered using a website such as geojson.io. The pathfinding algorithm is an implementation of the sorted edges algorithm, modified to use the number of moves between any two sensors as a distance measure. This takes avoiding no-fly zones into account when deciding what order to visit the sensors, and ensures a short and valid path. The system was completed in December 2020.
