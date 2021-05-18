@@ -13,4 +13,4 @@ Render the path as a GeoJSON line string, and create two output files. One file 
 
 # The Results
 
-This project was an interesting experience that I enjoyed working on, with plenty of problems to solve and no set way in which to solve them. I'm very pleased with the results, as I found that most paths completed in roughly 100 moves, far off from the 150 limit. This project recieved a mark of [Not yet marked].
+This project was an interesting experience that I enjoyed working on, with plenty of problems to solve and no set way in which to solve them. I'm very pleased with the results, as I found that most paths completed in roughly 100 moves, far off from the 150 limit. This project recieved a mark of 76%.
